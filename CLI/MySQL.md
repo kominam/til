@@ -10,7 +10,7 @@ mysql - u Username -p dbNameYouWant < databasename_backup.sql;
 ```
 
 ### Start id from 1
-``` bash
+``` sql
 ALTER TABLE tbl AUTO_INCREMENT = 1;
 ```
 ### Users and Privileges
@@ -30,10 +30,10 @@ SET PASSWORD FOR 'user'@'host' = PASSWORD('new_pass');
 SET PASSWORD = OLD_PASSWORD('new_pass');
 ```
 ### Change pass user
-``` bash
+``` sql
 ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass';
 ```
 ### Disable foreign key checks
-``` bash
+``` sql
 SET foreign_key_checks = 0;
 ```
