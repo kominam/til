@@ -1,8 +1,8 @@
 ### Definition
 -   Mục đích là phân giải tên miền (human-readable website) thành IPv4 hoặc IPv6
 -   Hoạt động trên cả 2 giao thức TCP và UDP và **port 53**
-### Abbreviation
-| Abbr | Full sentence |
+### Acronyms
+| Acronym | Full sentence |
 | -------- | -------- |
 | DNS | Domain Name System |
 | ISP | Internet Service Provider |
