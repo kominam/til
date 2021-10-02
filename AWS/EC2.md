@@ -1,5 +1,6 @@
 ### EC2 là gì?
 Amazon Elastic Compute Cloud (EC2) là một web service cung cấp tài nguyên hạ tầng linh hoạt trên cloud. EC2 giảm thời gian thiết lập và boot mới một server chỉ còn vài phút và cho phép bạn scale nhanh chóng tùy theo requirements.
+
 **Note**: Mỗi account chỉ chạy được tối đa 20 instance. Muốn chạy nhiều hơn phải request Amazon
 ### EC2 options
 ##### On Demand
@@ -22,6 +23,7 @@ là physical servers cho phép bạn sử dụng các software licenses như VMW
 
 ### EC2 types
 ![[ec2-type.png]]
+
 Bạn có thể nhớ theo câu sau: **Dr. McGift PX** tương đương:
 
 -   **D**: Density.
@@ -76,6 +78,7 @@ Partition: Tập hợp các rack vật lý lại tạo thành 1 partition
 Có 3 loại: Cluster, Partition, Spread
 
 **Cluster**
+
 ![[cluster-pg.png]]
 
 - AWS sẽ đưa các instance vào chạy trên cùng host/rack để có được tốc độ cao nhất có thể, low-latency và cùng 1 AZ
@@ -89,6 +92,7 @@ Có 3 loại: Cluster, Partition, Spread
 - Chỉ hỗ trợ các instance type có enhanced networking (Các instance nên chọn cùng instance type)
 
 **Partition**
+
 ![[partition-pg.png]]
 
 - Phân bổ các instance vào logical partition và không dùng chung với các instance khác.
@@ -100,6 +104,7 @@ Có 3 loại: Cluster, Partition, Spread
 - Phù hợp với các ứng dụng phân tán như HDFS, Cassandra
 
 **Spread**
+
 ![[spread-pg.png]]
 
 - Mỗi instance sẽ được phân bổ vào 1 partition
@@ -152,6 +157,7 @@ Roles sẽ bảo mật hơn so với việc lưu trữ access key và secret key
 -   role có thể assign cho EC2 instance sau khi EC2 instance đã được provisioned thông qua console hoặc command line.
 
 ### States
+
 ![[Instance-lifecycle.png]]
 
 Khi launch instance, trạng thái sẽ chuyển từ pending -> running
