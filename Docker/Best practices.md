@@ -16,56 +16,54 @@
 
 + Ta nên copy những file này vào image trước khi những lệnh này, nó sẽ sử dụng cache thay vi cài đặt lại từ đầu
 
-  ```Dockerfile
-  COPY Gemfile* ./
-	COPY package.json yarn.lock ./
-  RUN bundle install
-  ```
+```Dockerfile
+COPY Gemfile* ./
+COPY package.json yarn.lock ./
+RUN bundle install
+```
 
 + Nên gộp những lệnh RUN lại với nhau:
 
-    ```Dockerfile
-    RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
-      curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
-      echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-      apt-get update && \
-      apt-get install -y build-essential mysql-client libv8-dev nodejs yarn
-    ```
+```Dockerfile
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+  curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
+  echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
+  apt-get update && \
+  apt-get install -y build-essential mysql-client libv8-dev nodejs yarn
+```
 
 #### Bỏ dependencies không cần thiết
-  + Từ Docker 17.05 trở đi, Docker đã cho ra mắt **Multi-stage builds** để cứu rỗi linh hồn của những con chiên lạc lối.
+  + Từ Docker 17.05 trở đi, Docker đã cho ra mắt **Multi-stage builds**.
 
-    `Dockerfile`
+```Dockerfile
+# builder
+FROM golang:1.7.3 as builder
+WORKDIR /go/src/github.com/alexellis/href-counter/
+RUN go get -d -v golang.org/x/net/html
+COPY app.go    .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 
-    ```Dockerfile
-    # builder
-    FROM golang:1.7.3 as builder
-    WORKDIR /go/src/github.com/alexellis/href-counter/
-    RUN go get -d -v golang.org/x/net/html
-    COPY app.go    .
-    RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
-
-    # main image
-    FROM alpine:latest
-    RUN apk --no-cache add ca-certificates
-    WORKDIR /root/
-    COPY --from=builder /go/src/github.com/alexellis/href-counter/app .
-    CMD ["./app"]
-    ```
+# main image
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /go/src/github.com/alexellis/href-counter/app .
+CMD ["./app"]
+```
 
   + Khi build thì ta chỉ cần
 
-    ```shell
-    docker build -t alexellis2/href-counter:latest .
-    ```
+``` bash
+docker build -t alexellis2/href-counter:latest .
+```
 
   + Magic ở đâu?
 
-    ```Dockerfile
-    FROM golang:1.7.3 as builder
-    ...
-    COPY --from=builder /go/src/github.com/alexellis/href-counter/app .
-    ```
+```Dockerfile
+FROM golang:1.7.3 as builder
+...
+COPY --from=builder /go/src/github.com/alexellis/href-counter/app .
+```
 
   + Chính nó, **FROM xyz as builder** và **COPY --from=builder** (builder chỉ là example, bạn ghi tên mình vào đó cũng được)
 
@@ -73,17 +71,17 @@
 
   + Sau khi build, ta có thể dùng COPY với tham số `--from=stage_name` để copy bất cứ thứ gì trong image trên. Không dừng lại ở đó, cậu lệnh này còn cho phép ta copy file từ image (đã build) ở ngoài, thậm chí là remote image.
 
-    ```Dockerfile
-    COPY --from=nginx:latest /etc/nginx/nginx.conf /nginx.conf
-    ```
+```Dockerfile
+COPY --from=nginx:latest /etc/nginx/nginx.conf /nginx.conf
+```
 
   + Do ta chỉ copy một phần nhỏ của image builder, nên tất nhiên là chỉ những thứ ta copy mới tính vào kích cỡ image của ta, những thứ đời thừa khác không liên quan. Từ đó, ta đã giảm được một lượng kích thước đáng kể.
 
   + Khi Dockerfile của ta có nhiều stage, nếu chỉ muốn build 1 stage nào đó, hãy dùng thêm tham số `--target` khi build:
 
-    ```
-    docker build --target builder -t alexellis2/href-counter:latest .
-    ```
+``` bash
+docker build --target builder -t alexellis2/href-counter:latest .
+```
 
   + Khi chạy câu lệnh trên, Docker sẽ chỉ build builder stage mà thôi, còn mặc định nó sẽ chạy hết tất cả stage. (Note: khi chạy những stage dưới thì nó cũng sẽ chạy những stage trên)
 
@@ -109,25 +107,23 @@
 
 + Lấy 1 ví dụ đơn giản với image `ubuntu`
 
-  `Dockerfile`
-
-  ```Dockerfile
-  FROM ubuntu
-  CMD ["echo", "Hello world"]
-  ```
+```Dockerfile
+FROM ubuntu
+CMD ["echo", "Hello world"]
+```
 
 + Khi ta chạy image, nó sẽ in ra màn hình "Hello world". Đơn giản nó là chạy `echo "Hello world"`?
 
-+ Thực ra là nó đã chạy `/bin/sh -c echo "Hello world"`. WTF Magic gì vậy?
++ Thực ra là nó đã chạy `/bin/sh -c echo "Hello world"`
 
 + Vì Docker mặc định cho ta `ENTRYPOINT ["/bin/sh", "-c"]`. Và câu lệnh cuối cùng mà container chạy là `command = ENTRYPOINT + CMD`, chứ không đơn thuần chỉ là `CMD`.
 
 #### ENTRYPOINT VS CMD
 
-* `ENTRYPOINT`:
+* **ENTRYPOINT**:
   * Là command chạy mỗi khi container start
   * Required, mặc định là `/bin/sh -c`
-* `CMD`:
+* **CMD**:
   * Mảnh ghép còn lại của cuộc đời `ENTRYPOINT`, tuy nhiên có hay không cũng chả quan trọng, vì nếu chỉ 1 mình `ENTRYPOINT` là chạy được rồi thì không cần thêm `CMD` nữa.
   * Không có giá trị mặc định
 
@@ -157,8 +153,6 @@ Shell form invoke 1 câu lệnh shell, với đầy đủ tính năng của shel
 Còn với exec form, Docker parse chuỗi của ta theo format JSON, vì vậy ta phải dùng mảng của các string (nhớ double quote), sau đó làm gì đó ma giáo, nhưng không chạy như 1 câu lệnh shell, vì vậy những tính năng của shell đều cuốn theo chiều gió hết. Muốn sử dụng, ta phải thêm lệnh shell vào `CMD ["sh", "-c", "echo $HOME"]` (tuy nhiên ta đã có default ENTRYPOINT là `/bin/sh -c` rồi nên chỉ khi bạn override nó mới cần lưu ý.)
 
 Lưu ý nữa là khi dùng `ENTRYPOINT` theo shell form, `CMD` và command của `docker run` sẽ bị ignore hết.
-
-Ngoài ra, nó còn có liên quan đến shell processing, signal processing, khá là hại não, mọi người có thể dựa vào những keyword này để tìm hiểu thêm.
 
 ### So sánh LINK và DEPENDS_ON
 
